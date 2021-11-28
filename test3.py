@@ -42,14 +42,4 @@ if (__name__ == '__main__'):
             p.write("Okay\n")
             time.sleep(SLEEP_TIME_BETWEEN)
 
-# with p.stdout:
-#     for line in iter(p.stdout.readline, b''):
-#         line = str(line).replace("b'", "").replace("\\r\\n","").replace("'", "")
-#         print(line)
-#         if "place" in line:
-#             time.sleep(SLEEP_TIME_BETWEEN)
-#             p.stdin.write("OKAY".encode())
-#             p.stdin.close()
-# p.wait()
-
 time.sleep(SLEEP_TIME_END)
