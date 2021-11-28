@@ -1,28 +1,73 @@
+"""
+This python script uses an edited version of Brady Pierce's "Stepper_Job.py" 
+ script which pulls data from the appropriate Excel XML file. With this data, 
+ I added to the script to run a macro on the stepper tool to input this data.
+"""
+
+import os
 import pandas as pd
+import time
+import math
 
-def Stepper_Job(mainfile, num_map_sites, num_passes):
-    df = pd.read_excel(mainfile, sheet_name='Alignment and Main')
-    step_x = df['Value'][0]
-    stepdist_x = df['Value'][1]
-    step_y = df['Value'][2]
-    stepdist_y = df['Value'][3]
-    lkey_R = df['Value'][4]
-    lkey_C = df['Value'][5]
-    lkey_x = df['Value'][6]
-    lkey_y = df['Value'][7]
-    rkey_R = df['Value'][8]
-    rkey_C = df['Value'][9]
-    rkey_x = df['Value'][10]
-    rkey_y = df['Value'][11]
-    mask_x = df['Value'][12]
-    mask_y = df['Value'][13]
-    wafer_x = df['Value'][14]
-    wafer_y = df['Value'][15]
 
-    wafer_size = df['Value'][18]
-    left_blade = df['Value'][19]
+# User Parameters/Constants to Set
+XML_DIR = "./XML_Files/"
+NUM_MAP_SITES = 6
+
+
+def time_convert(sec):
+  mins = sec // 60
+  sec = sec % 60
+  hours = mins // 60
+  mins = mins % 60
+  print("Time Lapsed = {0}h:{1}m:{2}s".format(int(hours) ,int(mins), round(sec)))
+
+
+
+# MAIN():
+# =============================================================================
+
+# Starting stopwatch to see how long process takes
+start_time = time.time()
+
+# Clears some of the screen for asthetics
+print("\n\n\n\n\n\n\n\n\n\n\n\n\n")
+
+# Runs through each XML file in folder placement
+for XML_Name in os.listdir(XML_DIR):
+    
+    # Skips non Excel files
+    if ".xlsx" not in XML_Name:
+        continue
+    
+    XML_Path = os.path.join(XML_DIR, XML_Name)
+    
+    # Pulls data from XML file
+    # -------------------------------------------------------------------------
+    # Reads from first tab, "Alignment and Main" and grabs values
+    df = pd.read_excel(XML_Path, sheet_name='Alignment and Main')
+    
+    step_x      = df['Value'][0]
+    stepdist_x  = df['Value'][1]
+    step_y      = df['Value'][2]
+    stepdist_y  = df['Value'][3]
+    lkey_R      = df['Value'][4]
+    lkey_C      = df['Value'][5]
+    lkey_x      = df['Value'][6]
+    lkey_y      = df['Value'][7]
+    rkey_R      = df['Value'][8]
+    rkey_C      = df['Value'][9]
+    rkey_x      = df['Value'][10]
+    rkey_y      = df['Value'][11]
+    mask_x      = df['Value'][12]
+    mask_y      = df['Value'][13]
+    wafer_x     = df['Value'][14]
+    wafer_y     = df['Value'][15]
+
+    wafer_size  = df['Value'][18] # in mm
+    left_blade  = df['Value'][19]
     right_blade = df['Value'][20]
-    rear_blade = df['Value'][21]
+    rear_blade  = df['Value'][21]
     front_blade = df['Value'][22]
     
     print('UPDATE CREATION DATE: Y')
@@ -86,22 +131,24 @@ def Stepper_Job(mainfile, num_map_sites, num_passes):
     
     print('SAVE PASS? : Y')
     
-
-    for i in range(num_passes):
-        df_p_i = pd.read_excel(mainfile, sheet_name=i+2) 
+    i = 0
+    while True:
+        df_p_i = pd.read_excel(XML_Path, sheet_name = i+2) 
+        if math.isnan(df_p_i['Number of Plugs'][0]):
+            break
         print('\n', 'Pass Name:', df_p_i['Pass Name'][0], '\n')
         test_mask_x = df_p_i['Test site bottom left x on mask'][0]
         test_mask_y = df_p_i['Test site bottom left y on mask'][0]
-        left_blade = df_p_i['Plug Pass Reticle Blade Left Position'][0]
+        left_blade  = df_p_i['Plug Pass Reticle Blade Left Position'][0]
         right_blade = df_p_i['Plug Pass Reticle Blade Right Position'][0]
         front_blade = df_p_i['Plug Pass Reticle Blade Bottom Position'][0]
-        rear_blade = df_p_i['Plug Pass Reticle Blade Top Position'][0]
+        rear_blade  = df_p_i['Plug Pass Reticle Blade Top Position'][0]
              
 
-        left_b = (left_blade * 5) / 1000 + 50
+        left_b  = (left_blade * 5) / 1000 + 50
         right_b = 50 - (right_blade * 5) / 1000
         front_b = (front_blade * 5) / 1000 + 50
-        rear_b = 50 - (rear_blade * 5) / 1000
+        rear_b  = 50 - (rear_blade * 5) / 1000
     
         print('Aperture Blades:', '\n', 'Left:', left_b, '\n', 'Right:', right_b, '\n', 'Front:', front_b, '\n', 'Rear:', rear_b,)
         num_plugs = int(df_p_i['Number of Plugs'][0])
@@ -115,6 +162,8 @@ def Stepper_Job(mainfile, num_map_sites, num_passes):
             print('\n', 'Plug', str(df_p_i['Plug Number '][x]) + ':', '\n', 'R:', df_p_i['Plug Closest Row '][x], '\t', 'y:', 
               y_offset, '\n',
               'C:', df_p_i['Plug Closest Column'][x], '\t', 'x:', x_offset)
+        
+        i += 1
             
             
     print('PASS\nNAME: MAP\nPASS COMMENT:\nMAPPING')
@@ -124,8 +173,12 @@ def Stepper_Job(mainfile, num_map_sites, num_passes):
     print('MAP EVERY N TH WAFER N = 1\nMICROSCOPE FOCUS OFFSET:0\nPASS SHIFT:\nX:0\nY:0\nA-RRAY OR P-LUG: P')
 
     print('\n\nPLUGS:\n')
-    df_m = pd.read_excel(mainfile, sheet_name='Mapping')
-    for i in range(num_map_sites):
+    
+    df_m = pd.read_excel(XML_Path, sheet_name = 'Mapping')
+    i = 0
+    while True:
+        if math.isnan(df_m['Closest Column'][i]):
+            break
         x_offset = round((((-1*(step_x/2-0.5)*stepdist_x+(step_x-df_m['Closest Column'][i])*stepdist_x) - 
                           df_m['Center of alignment site x on wafer'][i]) / 1000), 5)
         y_offset = round(((df_m['Center of alignment site y on wafer'][i] -
@@ -133,13 +186,25 @@ def Stepper_Job(mainfile, num_map_sites, num_passes):
                            )) / 1000, 5)
         print('Plug', str(df_m['Map Site Number'][i]) + ':', '\n', 'R:', df_m['Closest Row'][i], '\t', 'y:', y_offset, '\n', 
              'C:', df_m['Closest Column'][i], '\t', 'x:', x_offset)
-        
+        i += 1
         
         
     print('NAME (<CR> TO EXIT PASS SETUP) :')
     print('WRITE TO DISK?:Y')
     print('PURGE EDITED FILES ? : Y')
-   
-Stepper_Job('R:/public/STEPPER/Stepper Files/X Display/Bed of Nails/Stepper Job - 3x3 Centered.xlsx', 6, 1)
+    # -------------------------------------------------------------------------
+    
+    
+    # Macro
+    # -------------------------------------------------------------------------
 
-Stepper_Job('//mcrtp-file-01/users/brady.pearce/My Documents/Stepper/Direct Drive New Order/Direct Drive INT2 First.xlsx', 7, 0)
+
+
+print("\nThis program is done!")
+
+# Starting stopwatch to see how long process takes
+print("Total Time: ")
+end_time = time.time()
+time_lapsed = end_time - start_time
+time_convert(time_lapsed)
+# =============================================================================
