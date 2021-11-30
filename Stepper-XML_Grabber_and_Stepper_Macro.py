@@ -101,6 +101,7 @@ for XML_Name in os.listdir(XML_DIR):
     rkey_yoffset = round(((rkey_y - (-1*(step_y/2-0.5)*stepdist_y+(rkey_R-1)*stepdist_y) ) / 1000), 5)
     lkey_xoffset = round((((-1*(step_x/2-0.5)*stepdist_x+(step_x-lkey_C)*stepdist_x) - lkey_x) / 1000), 5)
     lkey_yoffset = round(((lkey_y - (-1*(step_y/2-0.5)*stepdist_y+(lkey_R-1)*stepdist_y)) / 1000), 5)
+    
     print ('ALIGNMENT PARAMATERS \nSTANDARD KEYS?: N\nRIGHT ALIGNMENT DIE CENTER:', '\n', 'R:', int(rkey_R), '\n', 'C:', int(rkey_C)
            , '\nRIGHT KEY OFFSET\nX:', rkey_xoffset, '\nY:', rkey_yoffset, '\nLEFT ALGINMENT DIE CENTER:', '\n', 'R:', int(lkey_R), '\n', 
            'C:', int(lkey_C), '\nLEFT KEY OFFSET\nX:', lkey_xoffset, '\nY:', lkey_yoffset, '\n')
